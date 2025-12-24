@@ -3,8 +3,8 @@
 # Scans only staged files.
 set -e
 
-# Exit early if nothing is staged.
-files=$(git diff --cached --name-only --diff-filter=ACM)
+# Exit early if nothing is staged. Skip this hook file to avoid self-blocking.
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -v '^\.githooks/pre-commit$' || true)
 if [ -z "$files" ]; then
   exit 0
 fi
