@@ -1,0 +1,27 @@
+#!/bin/sh
+# Block commits that add obvious secrets or real-looking Supabase keys.
+# Scans only staged files.
+set -e
+
+# Exit early if nothing is staged.
+files=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -z "$files" ]; then
+  exit 0
+fi
+
+pattern='(sb_secret|sb_publishable|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|AIza[0-9A-Za-z\-_]{20,}|xox[baprs]-[0-9A-Za-z-]{10,}|ghp_[0-9A-Za-z]{30,}|gho_[0-9A-Za-z]{30,}|github_pat_[0-9A-Za-z_]{20,}|-----BEGIN [A-Z ]+ PRIVATE KEY-----|eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,})'
+
+# Use rg if available; fallback to grep.
+if command -v rg >/dev/null 2>&1; then
+  echo "$files" | xargs rg -n -S "$pattern" && {
+    echo "ERROR: potential secret found in staged files. Commit blocked." >&2
+    exit 1
+  }
+else
+  echo "$files" | xargs grep -nE "$pattern" && {
+    echo "ERROR: potential secret found in staged files. Commit blocked." >&2
+    exit 1
+  }
+fi
+
+exit 0
