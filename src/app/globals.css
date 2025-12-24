@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 国家统计局风格的全局样式 */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+  }
+}
+
+@layer components {
+  /* 官方风格按钮 */
+  .btn-official {
+    @apply bg-official-blue hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200;
+  }
+
+  /* 官方风格卡片 */
+  .card-official {
+    @apply bg-white rounded-lg shadow-md border border-gray-200;
+  }
+}

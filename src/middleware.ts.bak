@@ -1,0 +1,76 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export async function middleware(req: NextRequest) {
+  // 获取当前路径
+  const { pathname } = req.nextUrl
+
+  // 定义受保护的路由（需要认证）
+  const protectedRoutes = [
+    '/',
+    '/upload',
+    '/results',
+    '/dashboard',
+    '/profile',
+    '/settings',
+  ]
+
+  // 定义公共路由（不需要认证）
+  const publicRoutes = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/callback',
+    '/terms',
+    '/privacy',
+    '/api/auth',
+  ]
+
+  // 检查是否为受保护的路由
+  const isProtectedRoute = protectedRoutes.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  )
+
+  // 检查是否为公共路由
+  const isPublicRoute = publicRoutes.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  )
+
+  // 简单的会话检查 - 检查是否有 access_token cookie
+  const accessToken = req.cookies.get('sb-access-token')
+  const sessionActive = !!accessToken
+
+  // 如果访问受保护路由但未认证，重定向到登录页面
+  if (isProtectedRoute && !sessionActive) {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('returnUrl', encodeURIComponent(pathname))
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 如果已认证用户访问登录/注册页面，重定向到首页
+  if (sessionActive && (pathname === '/login' || pathname === '/register')) {
+    return NextResponse.redirect(new URL('/', req.url))
+  }
+
+  // 处理 Supabase Auth 回调
+  if (pathname.startsWith('/auth/callback')) {
+    // 让回调页面处理认证逻辑
+    return NextResponse.next()
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (public files)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
+}
