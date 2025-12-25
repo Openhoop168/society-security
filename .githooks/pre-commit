@@ -1,6 +1,4 @@
 #!/bin/sh
-# Block commits that add obvious secrets or real-looking Supabase keys.
-# Scans only staged files.
 set -e
 
 # Exit early if nothing is staged. Skip this hook file to avoid self-blocking.
